@@ -1,6 +1,7 @@
 /*
- * This program is to test the sensor connections of the PCB. an ADC reading of zero indicates the sensor is not 
- * connected, and an ADC reading of about 450-650 indicates a sensor is connected and reading at a flat angle
+ * This program was written to test the sensor connections of the PCB. An ADC reading of zero indicates the sensor is not 
+ * connected, and an ADC reading of about 450-650 indicates a sensor is connected and reading at a flat angle. A resistance measurement of 
+ * infinite indicates that the sensor is disconnected. A resistance measurement of anything for 8k ohms indicates the sensors are connected.
  */
 
 const int FLEX_1 = A2;
@@ -33,7 +34,7 @@ A11 = D12 = PD6
 */
 
 
-const int samplingRateUS = 1800;     //sampling rate of 256 Hz.
+const int samplingRateMs = 1000;     //sampling rate of 1s.
 const float seriesResistor = 10000.0; //10k resistor from voltage dividing circuit
 const float VCC = 5.0;
 const float STRAIGHT_RESISTANCE = 10000.0; // resistance when straight
@@ -42,7 +43,7 @@ float COUNTS = 0;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
+  Serial.begin(9600);
   analogReference(DEFAULT);
   pinMode(FLEX_1,INPUT);
   pinMode(FLEX_2,INPUT);
@@ -55,21 +56,45 @@ void setup() {
   pinMode(FLEX_9,INPUT);
   pinMode(FLEX_10,INPUT);
   pinMode(FLEX_11,INPUT);
+  Serial.println("Hit any key to receive a new reading");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  static unsigned long samplingTimerUs = micros();
-  
-  if(micros() - samplingTimerUs >= samplingRateUS)
+  static unsigned long samplingTimerMs = millis();
+  if(millis() - samplingTimerMs >= samplingRateMs)
   { 
-    Serial.println(analogRead(FLEX_11));
-    samplingTimerUs = micros();
+    //Serial.println(analogRead(FLEX_11));
+    samplingTimerMs = millis();
+    
+    Serial.println ("Reading all flex sensors...");     // signal initalization done
+    Serial.println(" ");
+    Serial.print("Flex Sensor 1:  "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_1) * VCC /1023.0) - 1.0)));
+    Serial.print("Flex Sensor 2:  "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_2) * VCC /1023.0) - 1.0)));
+    Serial.print("Flex Sensor 3:  "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_3) * VCC /1023.0) - 1.0)));
+    Serial.print("Flex Sensor 4:  "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_4) * VCC /1023.0) - 1.0)));
+    Serial.print("Flex Sensor 5:  "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_5) * VCC /1023.0) - 1.0)));
+    Serial.print("Flex Sensor 6:  "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_6) * VCC /1023.0) - 1.0)));
+    Serial.print("Flex Sensor 7:  "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_7) * VCC /1023.0) - 1.0)));
+    Serial.print("Flex Sensor 8:  "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_8) * VCC /1023.0) - 1.0)));
+    Serial.print("Flex Sensor 9:  "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_9) * VCC /1023.0) - 1.0)));
+    Serial.print("Flex Sensor 10: "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_10) * VCC /1023.0) - 1.0)));
+    Serial.print("Flex Sensor 11: "); Serial.println((float)(seriesResistor * (VCC / (analogRead(FLEX_11) * VCC /1023.0) - 1.0)));
+    Serial.println("Hit any key to receive a new reading");
+    Serial.println(" ");
+    while(Serial.available() == 0){}
+    char input = Serial.read();
+    //Serial.println(input);
+    //char dump = Serial.read();
+    
   }//timer loop
 }//loop
 
+/*
+ * This function gives the user the option to read the resistance
+ */
 float ReadResistance(float SENSOR)
 {
   float voltage = analogRead(SENSOR) * VCC /1023.0;
-  return (float)(seriesResistor * (VCC / voltage - 1.0));
+  return (float)(seriesResistor * (VCC / (analogRead(SENSOR) * VCC /1023.0) - 1.0));
 }
